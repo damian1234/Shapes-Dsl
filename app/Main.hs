@@ -19,7 +19,8 @@ render = do
   H.head $ H.title "Assignment"
   H.body $ do
     H.h1 "Shape"
-    S.svgdesc [((S.translate (S.Vector 200 200)),S.square, [(A.Blue,(S.boarder A.Black 5))])]
+    S.bldSvg [[((S.translate (S.Vector 200 200)) S.<+>(S.scale (S.Vector 2 2)) S.<+> (S.myRotate 45), (S.square, 50.0, 10.0, 10.0), (A.Blue,(S.boarder A.Black 5)))],[((S.translate (S.Vector 200 500)) S.<+>(S.scale (S.Vector 2 2)), (S.circle, 50.0, 10.0, 10.0), (A.Red,(S.boarder A.Black 5)))]]
+
 
 
 --  S.svgdesc [((S.rotate 45),S.square, [(A.Blue,(S.boarder A.Black 5))])]

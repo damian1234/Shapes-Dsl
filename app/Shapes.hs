@@ -5,15 +5,15 @@ module Shapes(
   Shape, Point, Vector(..), Transform, Drawing, Boarder,
   point, getX, getY,
   empty, Shapes.circle, square,boarder,
-  identity, Shapes.translate, Shapes.rotate, Shapes.scale, (<+>),
-  inside,svgdesc)  where
+  identity, Shapes.translate, Shapes.myRotate, Shapes.scale, (<+>),
+  inside,bldSvg)  where
 
 import Ansi
 import Text.Blaze (toMarkup)
 import Text.Blaze.Svg  hiding (title, matrix)
 import Text.Blaze.Svg11 as SV11 hiding (title, matrix)
 import Text.Blaze.Svg11.Attributes as SV11A hiding (title, matrix)
-
+import Text.Blaze.Internal as I hiding (matrix, Empty)
 
 
 -- Utilities
@@ -68,6 +68,7 @@ data Transform = Identity
            | Scale Vector
            | Compose Transform Transform
            | Rotate Matrix
+           | MyRotate Double
              deriving Show
 
 
@@ -89,23 +90,31 @@ data Boarder = Boarder Colour Double
                deriving Show
 boarder :: Colour-> Double -> Boarder
 boarder = Boarder
-type Style = [(Colour, Boarder)]
+type Style = (Colour, Boarder)
+--ShapeDesc Shape in question, size(radius of cirlce or side of a square, x and y coordinates follow
+type ShapeDesc = (Shape, Double,Double,Double)
 
-type Drawing = [(Transform,Shape,Style)]
+
+type Drawing = [(Transform,ShapeDesc,Style)]
 
 -----------------------------------------------------
+bldSvg :: [Drawing] -> Svg
+bldSvg xs = svg! width "1000"! height "1000" $ (sequence_ (bldLst xs))
 
-svgdesc :: Drawing -> Svg-- t is transform c is colour of shape, b is boarder info
-svgdesc [(t,Circle,[(c, b)])] = svg! width "1000" ! height "1000"  $ myShape Circle ! cx "500" ! cy "500" ! r "40" ! stroke (boarderColour b) ! strokeWidth (boarderSize b) ! fill (myColour c) !SV11A.transform(myTransform t)
+--buld list of svg's
 
-svgdesc [(t,Square,[(c,b)])] = svg! width "1000"! height "1000" $ myShape Square ! cx "500"! cy "500" ! width "100" ! height "100"! stroke (boarderColour b) ! strokeWidth (boarderSize b)! fill (myColour c) !SV11A.transform(myTransform t)
+bldLst :: [Drawing] -> [Svg]
+bldLst xs = map svgdesc xs
 
-
+svgdesc :: Drawing -> Svg
+svgdesc [(t,s,(c,b))] = myShape s ! stroke (boarderColour b) ! strokeWidth (boarderSize b)! fill (myColour c) !SV11A.transform(myTransform t)
 --SV11A.transform(myTransform t)
-myRotate ::(Show a) => a -> SV11.AttributeValue
-myRotate x = SV11.rotate x
---myTransform :: (Shapes.Transform -> Point -> Shapes.Transform) -> Point -> SV11.AttributeValue
---c being colour s being size
+
+convert :: (Show a) => a -> SV11.AttributeValue
+convert x = (I.stringValue (show x))
+--rotate without matrix param
+myRotate ang = MyRotate ang
+
 boarderSize :: Boarder -> SV11.AttributeValue
 boarderSize (Boarder _ s) = toValue s
 
@@ -113,16 +122,15 @@ boarderColour :: Boarder -> SV11.AttributeValue
 boarderColour (Boarder c _) = myColour c
 
 myTransform :: Shapes.Transform -> SV11.AttributeValue
-myTransform (Scale (Vector x y)) = SV11.scale x y 
+myTransform (Scale (Vector x y)) = SV11.scale x y
 myTransform (Translate (Vector x y)) = SV11.translate x y
-myTransform (Rotate ang) = SV11.rotate ang--myRotate ang
+myTransform (MyRotate ang) = SV11.rotate ang
 myTransform (Compose t1 t2) = (mappend (myTransform t1) (myTransform t2))
---myTransform (Compose t1 t2) p= myTransform t2 $ myTransform t1 p
 
 
-myShape :: Shape -> Svg
-myShape Circle = SV11.circle
-myShape Square = SV11.rect
+myShape :: ShapeDesc -> Svg
+myShape (Circle, rad, x, y) = SV11.circle! cx "50"! cy "50"! r (convert rad)  
+myShape (Square, s, x, y) = SV11.rect! cx "50"! cy "50" ! width (convert s)! height (convert s)
 
 ---------------colour interpretation-----------------
 
@@ -141,8 +149,8 @@ myColour White = "white"
 inside :: Point -> Drawing -> Bool
 inside p d = or $ map (inside1 p) d
 
-inside1 :: Point -> (Transform, Shape,Style) -> Bool
-inside1 p (t,s,_) = insides (Shapes.transform t p) s
+inside1 :: Point -> (Transform, ShapeDesc,Style) -> Bool
+inside1 p (t,(s,_,_,_),_) = insides (Shapes.transform t p) s
 
 insides :: Point -> Shape -> Bool
 p `insides` Empty = False

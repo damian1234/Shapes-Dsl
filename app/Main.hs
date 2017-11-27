@@ -16,25 +16,12 @@ import Text.Blaze.Svg.Renderer.Text (renderSvg)
 import Data.Text.Lazy
 import qualified Shapes as S
 import qualified Ansi as A
---serve = scotty 3000 $ get "/" $ html $ pack $ P.renderHtml render 
-
-render:: [S.Drawing] -> H.Html 
-render d = do
-  H.head $ H.title "Assignment"
-  H.body $ do
-    H.h1 "Shape"
 
 
-
-
-example =  [[((S.translate (S.Vector 200 200)) S.<+>(S.scale (S.Vector 2 2)) S.<+> (S.myRotate 45), (S.square, 50.0, 10.0, 10.0), (A.Blue,(S.boarder A.Black 5)))],[((S.translate (S.Vector 200 500)) S.<+>(S.scale (S.Vector 2 2)), (S.circle, 50.0, 10.0, 10.0), (A.Red,(S.boarder A.Black 5)))]]
-
-
-
---  S.svgdesc [((S.rotate 45),S.square, [(A.Blue,(S.boarder A.Black 5))])]
-
-
-
+-- this is the index page when the app is running. it will have a text box with an example already in the text box
+-- this example is also the format for a valid drawing which is [[drawing],[drawing]] so you could have 1 or multiple drawings
+--get displays the form with the example entered into the text box
+-- the post takes the text entered and then uses my Svg descriptor to translate it the input to and Svg
 main :: IO ()
 main = scotty 3000 $ do
     get "/" $ html $ pack $ myForm
@@ -43,22 +30,12 @@ main = scotty 3000 $ do
         desc <- param "shapeDesc"
         html $ pack $ P.renderHtml $ do
           (S.bldSvg (read desc))
-       -- sh <- param "shape"
-       -- st <- param "style"
        
 myForm = P.renderHtml $ do
       H.form ! HA.method "POST" $ do
           H.textarea (H.toHtml (show example)) ! HA.name "shapeDesc"
           H.div $ H.button "submit"      
--- let shape = sh::String
-       -- let style = st::String    
---    get "/shapes" $ do 
-      --get "/shapes" $ do
-      --    html $ pack $ P.renderHtml (S.bldSvg [[(transform, (S.circle, 50.0, 10.0, 10.0), (A.Red,(S.boarder A.Black 5)))]] )
-      --    where t <- param "transform"
-       --       let trans = t::String  --Transform
-       --       let transform = read trans::S.Transform
 
-    --    S.bldSvg[transform, shape, style]       
---    get "/shapes" $ html $ pack $ P.renderHtml render    
---[trans, shape, style]
+example =  [[((S.translate (S.Vector 200 200)) S.<+>(S.scale (S.Vector 2 2)) S.<+> (S.myRotate 45), (S.square, 50.0, 10.0, 10.0), (A.Blue,(S.boarder A.Black 5)))],[((S.translate (S.Vector 200 500)) S.<+>(S.scale (S.Vector 2 2)), (S.circle, 50.0, 10.0, 10.0), (A.Red,(S.boarder A.Black 5)))]]
+
+

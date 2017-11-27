@@ -19,7 +19,7 @@ import Text.Blaze.Internal as I hiding (matrix, Empty)
 -- Utilities
 
 data Vector = Vector Double Double
-              deriving Show
+              deriving (Show, Read)
 vector = Vector
 
 cross :: Vector -> Vector -> Double
@@ -34,7 +34,7 @@ invert (Matrix (Vector a b) (Vector c d)) = matrix (d / k) (-b / k) (-c / k) (a 
         
 -- 2x2 square matrices are all we need.
 data Matrix = Matrix Vector Vector
-              deriving Show
+              deriving (Show, Read)
 
 matrix :: Double -> Double -> Double -> Double -> Matrix
 matrix a b c d = Matrix (Vector a b) (Vector c d)
@@ -53,7 +53,7 @@ point = vector
 data Shape = Empty 
            | Circle 
            | Square
-             deriving Show
+             deriving (Show, Read)
 
 empty, circle, square :: Shape
 
@@ -69,7 +69,7 @@ data Transform = Identity
            | Compose Transform Transform
            | Rotate Matrix
            | MyRotate Double
-             deriving Show
+             deriving (Show, Read)
 
 
 
@@ -87,16 +87,15 @@ transform (Rotate m)                 p = (invert m) `mult` p
 transform (Compose t1 t2)            p = Shapes.transform t2 $ Shapes.transform t1 p
 
 data Boarder = Boarder Colour Double
-               deriving Show
+               deriving (Show,Read)
 boarder :: Colour-> Double -> Boarder
 boarder = Boarder
 type Style = (Colour, Boarder)
 --ShapeDesc Shape in question, size(radius of cirlce or side of a square, x and y coordinates follow
 type ShapeDesc = (Shape, Double,Double,Double)
-
+--drawWrapper f (x:xs) = (mappend (f x) (drawWrapper xs))
 
 type Drawing = [(Transform,ShapeDesc,Style)]
-
 -----------------------------------------------------
 bldSvg :: [Drawing] -> Svg
 bldSvg xs = svg! width "1000"! height "1000" $ (sequence_ (bldLst xs))
